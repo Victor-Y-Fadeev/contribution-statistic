@@ -62,8 +62,8 @@ WIDTH = 11
 HEIGHT = 11
 RADIUS = 2
 
-THEME = DARK_THEME
-COLOR = DARK_COLOR
+THEME = LIGHT_THEME
+COLOR = LIGHT_COLOR
 
 
 def roundrect(context, x, y, width, height, r):
@@ -79,6 +79,37 @@ def roundrect(context, x, y, width, height, r):
 
     context.restore()
 
+def calendar_graph(context):
+    context.save()
+    context.set_source_rgb(*THEME['background'])
+    context.set_line_width(LINE)
+    context.paint()
+
+    context.select_font_face(FONT, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+    context.set_source_rgb(*THEME['font'])
+    context.set_font_size(SIZE)
+
+    context.move_to(0, 45)
+    context.show_text("Mon")
+    context.move_to(0, 76)
+    context.show_text("Wed")
+    context.move_to(0, 105)
+    context.show_text("Fri")
+
+    context.translate(31, 20)
+    for x in range(53):
+        for y in range(7):
+            roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
+            context.set_source_rgb(*THEME['graph'])
+            context.fill_preserve()
+            context.stroke()
+
+            roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
+            context.set_source_rgba(*THEME['border'], THEME['alpha'])
+            context.stroke()
+
+    context.restore()
+
 def main():
     # calendar = requests.get('https://github.com/users/Victor-Y-Fadeev/contributions'
     #     , params={'to': '2021-12-31'})
@@ -87,38 +118,7 @@ def main():
 
     with cairo.SVGSurface("calendar-graph.svg", 823, 128) as surface:
         context = cairo.Context(surface)
-        context.set_line_width(LINE)
-
-        context.save()
-        context.set_source_rgb(*THEME['background'])
-        context.paint()
-        context.restore()
-
-        context.select_font_face(FONT, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-        context.set_source_rgb(*THEME['font'])
-        context.set_font_size(SIZE)
-
-        context.move_to(0, 45)
-        context.show_text("Mon")
-        context.move_to(0, 76)
-        context.show_text("Wed")
-        context.move_to(0, 105)
-        context.show_text("Fri")
-
-        context.save()
-        context.translate(31, 20)
-        for x in range(53):
-            for y in range(7):
-                roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
-                context.set_source_rgb(*THEME['graph'])
-                context.fill_preserve()
-                context.stroke()
-
-                roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
-                context.set_source_rgba(*THEME['border'], THEME['alpha'])
-                context.stroke()
-
-        context.restore()
+        calendar_graph(context)
 
 if __name__ == '__main__':
     main()
