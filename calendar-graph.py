@@ -12,6 +12,9 @@ from bs4 import BeautifulSoup
 
 RGB = lambda color: tuple(int(color[i:i+2], 16)/255 for i in (1, 3, 5))
 
+LIGHT = RGB('#ffffff')
+LIGHT_FONT = RGB('#24292f')
+
 LIGHT_BACKGROUND = RGB('#ebedf0')
 LIGHT_BORDER     = RGB('#1b1f23')
 LIGHT_ALPHA      = 0.06
@@ -26,6 +29,9 @@ LIGHT_HALLOWEEN_LEVEL_2 = RGB('#ffc501')
 LIGHT_HALLOWEEN_LEVEL_3 = RGB('#fe9600')
 LIGHT_HALLOWEEN_LEVEL_4 = RGB('#03001c')
 
+
+DARK = RGB('#0d1117')
+DARK_FONT = RGB('#c9d1d9')
 
 DARK_BACKGROUND = RGB('#161b22')
 DARK_BORDER     = RGB('#ffffff')
@@ -102,10 +108,28 @@ def main():
 
     with cairo.SVGSurface("calendar-graph.svg", 823, 128) as surface:
         context = cairo.Context(surface)
-        context.set_line_width(1)
         # context.set_fill_rule(cairo.FillRule.EVEN_ODD)
         # context.set_line_join(cairo.LineJoin.BEVEL)
         # context.set_operator(cairo.OPERATOR_SOURCE)
+
+        context.save()
+        context.set_source_rgb(*LIGHT)
+        context.paint()
+        context.restore()
+
+        # -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"
+        context.select_font_face("Segoe UI", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+        context.set_source_rgb(*LIGHT_FONT)
+        context.set_font_size(12)
+
+        context.move_to(0, 45)
+        context.show_text("Mon")
+        context.move_to(0, 76)
+        context.show_text("Wed")
+        context.move_to(0, 105)
+        context.show_text("Fri")
+
+        context.set_line_width(1)
 
         context.save()
         context.translate(31, 20)
@@ -122,7 +146,6 @@ def main():
 
         context.restore()
         # context.stroke()
-
 
 if __name__ == '__main__':
     main()
