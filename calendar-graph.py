@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import requests
-import colorsys
+# import requests
+# import colorsys
 import cairo
 import math
 from bs4 import BeautifulSoup
@@ -24,7 +24,6 @@ DARK_THEME = {
     'border'    : RGB('#ffffff'),
     'alpha'     : 0.05
 }
-
 
 LIGHT_COLOR = {
     1 : RGB('#9be9a8'),
@@ -67,11 +66,6 @@ THEME = DARK_THEME
 COLOR = DARK_COLOR
 
 
-# def request_user_input(prompt='> '):
-#     """Request input from the user and return what has been entered."""
-#     return raw_input(prompt)
-
-
 def roundrect(context, x, y, width, height, r):
     context.save()
     context.translate(x, y)
@@ -85,44 +79,6 @@ def roundrect(context, x, y, width, height, r):
 
     context.restore()
 
-
-def compute_rgb(background, level, green):
-    if background[1] == green:
-        return None
-
-    alpha = (background[1] -  level[1]) / (background[1] - green)
-    if alpha < 0 or alpha > 1:
-        return None
-
-    red = background[0] - (background[0] -  level[0]) / alpha
-    blue = background[2] - (background[2] -  level[2]) / alpha
-    if red >= 0 and red < 256 and blue >= 0 and blue < 256:
-        return (math.ceil(red), green, math.ceil(blue), math.ceil(alpha * 100) / 100)
-    else:
-        return None
-
-def check_green(green):
-    l1 = compute_rgb(THEME['graph'], COLOR[1], green)
-    l2 = compute_rgb(THEME['graph'], COLOR[2], green)
-    l3 = compute_rgb(THEME['graph'], COLOR[3], green)
-    l4 = compute_rgb(THEME['graph'], COLOR[4], green)
-
-    # if (l1 and l2 and l3 and l4):
-    #         # and abs(np.subtract(l1[0:3], l2[0:3])).max() < 1
-    #         # and abs(np.subtract(l2[0:3], l3[0:3])).max() < 1
-    #         # and abs(np.subtract(l3[0:3], l4[0:3])).max() < 1
-    #         # and abs(np.subtract(l4[0:3], l1[0:3])).max() < 1):
-    #     print(l1)
-    #     print(l2)
-    #     print(l3)
-    #     print(l4)
-    #     print()
-
-    if l1: print('level 1 = {}'.format(l1))
-    if l2: print('level 2 = {}'.format(l2))
-    if l3: print('level 3 = {}'.format(l3))
-    if l4: print('level 4 = {}'.format(l4))
-
 def main():
     # calendar = requests.get('https://github.com/users/Victor-Y-Fadeev/contributions'
     #     , params={'to': '2021-12-31'})
@@ -131,16 +87,13 @@ def main():
 
     with cairo.SVGSurface("calendar-graph.svg", 823, 128) as surface:
         context = cairo.Context(surface)
-        # context.set_fill_rule(cairo.FillRule.EVEN_ODD)
-        # context.set_line_join(cairo.LineJoin.BEVEL)
-        # context.set_operator(cairo.OPERATOR_SOURCE)
+        context.set_line_width(LINE)
 
         context.save()
         context.set_source_rgb(*THEME['background'])
         context.paint()
         context.restore()
 
-        # -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"
         context.select_font_face(FONT, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         context.set_source_rgb(*THEME['font'])
         context.set_font_size(SIZE)
@@ -151,8 +104,6 @@ def main():
         context.show_text("Wed")
         context.move_to(0, 105)
         context.show_text("Fri")
-
-        context.set_line_width(LINE)
 
         context.save()
         context.translate(31, 20)
@@ -168,7 +119,6 @@ def main():
                 context.stroke()
 
         context.restore()
-        # context.stroke()
 
 if __name__ == '__main__':
     main()
