@@ -10,7 +10,7 @@ import math
 from bs4 import BeautifulSoup
 
 
-RGB = lambda color: tuple(int(color[i:i+2], 16) for i in (1, 3, 5))
+RGB = lambda color: tuple(int(color[i:i+2], 16)/255 for i in (1, 3, 5))
 
 LIGHT_BACKGROUND = RGB('#ebedf0')
 LIGHT_BORDER     = RGB('#1b1f23')
@@ -78,11 +78,6 @@ def check_green(green):
     l3 = compute_rgb(LIGHT_BACKGROUND, LIGHT_LEVEL_3, green)
     l4 = compute_rgb(LIGHT_BACKGROUND, LIGHT_LEVEL_4, green)
 
-    if l1: print('level 1 = {}'.format(l1))
-    if l2: print('level 2 = {}'.format(l2))
-    if l3: print('level 3 = {}'.format(l3))
-    if l4: print('level 4 = {}'.format(l4))
-
     # if (l1 and l2 and l3 and l4):
     #         # and abs(np.subtract(l1[0:3], l2[0:3])).max() < 1
     #         # and abs(np.subtract(l2[0:3], l3[0:3])).max() < 1
@@ -94,35 +89,39 @@ def check_green(green):
     #     print(l4)
     #     print()
 
+    if l1: print('level 1 = {}'.format(l1))
+    if l2: print('level 2 = {}'.format(l2))
+    if l3: print('level 3 = {}'.format(l3))
+    if l4: print('level 4 = {}'.format(l4))
+
 def main():
-    for i in range(256):
-        check_green(i)
     # calendar = requests.get('https://github.com/users/Victor-Y-Fadeev/contributions'
     #     , params={'to': '2021-12-31'})
     # for rect in BeautifulSoup(calendar.text, "html.parser").find_all('rect'):
     #     print(rect.get('data-date'))
 
-    # with cairo.SVGSurface("calendar-graph.svg", 823, 128) as surface:
-    #     context = cairo.Context(surface)
-    #     context.set_line_width(1)
-    #     context.set_fill_rule(cairo.FillRule.EVEN_ODD)
-    #     # context.set_line_join(cairo.LineJoin.BEVEL)
+    with cairo.SVGSurface("calendar-graph.svg", 823, 128) as surface:
+        context = cairo.Context(surface)
+        context.set_line_width(1)
+        # context.set_fill_rule(cairo.FillRule.EVEN_ODD)
+        # context.set_line_join(cairo.LineJoin.BEVEL)
+        # context.set_operator(cairo.OPERATOR_SOURCE)
 
-    #     context.save()
-    #     context.translate(31, 20)
-    #     for x in range(53):
-    #         for y in range(7):
-    #             roundrect(context, 15*x, 15*y, 11, 11, 2)
-    #             context.set_source_rgb(*LIGHT_BACKGROUND)
-    #             context.fill()
-    #             context.stroke()
+        context.save()
+        context.translate(31, 20)
+        for x in range(53):
+            for y in range(7):
+                roundrect(context, 15*x, 15*y, 11, 11, 2)
+                context.set_source_rgb(*LIGHT_LEVEL_1)
+                context.fill_preserve()
+                context.stroke()
 
-    #             roundrect(context, 15*x, 15*y, 11, 11, 2)
-    #             context.set_source_rgba(*LIGHT_BORDER, LIGHT_ALPHA)
-    #             context.stroke()
+                roundrect(context, 15*x, 15*y, 11, 11, 2)
+                context.set_source_rgba(*LIGHT_BORDER, LIGHT_ALPHA)
+                context.stroke()
 
-    #     context.restore()
-    #     # context.stroke()
+        context.restore()
+        # context.stroke()
 
 
 if __name__ == '__main__':
