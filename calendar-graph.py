@@ -1,51 +1,71 @@
 #!/usr/bin/env python3
 
-# pip install numpy
-
 import requests
 import colorsys
 import cairo
 import math
-# import numpy as np
 from bs4 import BeautifulSoup
 
 
-RGB = lambda color: tuple(int(color[i:i+2], 16)/255 for i in (1, 3, 5))
+RGB = lambda color: tuple(int(color[i:i + 2], 16) / 255 for i in (1, 3, 5))
 
-LIGHT = RGB('#ffffff')
-LIGHT_FONT = RGB('#24292f')
+LIGHT_THEME = {
+    'background': RGB('#ffffff'),
+    'font'      : RGB('#24292f'),
+    'graph'     : RGB('#ebedf0'),
+    'border'    : RGB('#1b1f23'),
+    'alpha'     : 0.06
+}
 
-LIGHT_BACKGROUND = RGB('#ebedf0')
-LIGHT_BORDER     = RGB('#1b1f23')
-LIGHT_ALPHA      = 0.06
-
-LIGHT_LEVEL_1 = RGB('#9be9a8')
-LIGHT_LEVEL_2 = RGB('#40c463')
-LIGHT_LEVEL_3 = RGB('#30a14e')
-LIGHT_LEVEL_4 = RGB('#216e39')
-
-LIGHT_HALLOWEEN_LEVEL_1 = RGB('#ffee4a')
-LIGHT_HALLOWEEN_LEVEL_2 = RGB('#ffc501')
-LIGHT_HALLOWEEN_LEVEL_3 = RGB('#fe9600')
-LIGHT_HALLOWEEN_LEVEL_4 = RGB('#03001c')
+DARK_THEME = {
+    'background': RGB('#0d1117'),
+    'font'      : RGB('#c9d1d9'),
+    'graph'     : RGB('#161b22'),
+    'border'    : RGB('#ffffff'),
+    'alpha'     : 0.05
+}
 
 
-DARK = RGB('#0d1117')
-DARK_FONT = RGB('#c9d1d9')
+LIGHT_COLOR = {
+    1 : RGB('#9be9a8'),
+    2 : RGB('#40c463'),
+    3 : RGB('#30a14e'),
+    4 : RGB('#216e39')
+}
 
-DARK_BACKGROUND = RGB('#161b22')
-DARK_BORDER     = RGB('#ffffff')
-DARK_ALPHA      = 0.05
+LIGHT_HALLOWEEN_COLOR = {
+    1 : RGB('#ffee4a'),
+    2 : RGB('#ffc501'),
+    3 : RGB('#fe9600'),
+    4 : RGB('#03001c')
+}
 
-DARK_LEVEL_1 = RGB('#0e4429')
-DARK_LEVEL_2 = RGB('#006d32')
-DARK_LEVEL_3 = RGB('#26a641')
-DARK_LEVEL_4 = RGB('#39d353')
+DARK_COLOR = {
+    1 : RGB('#0e4429'),
+    2 : RGB('#006d32'),
+    3 : RGB('#26a641'),
+    4 : RGB('#39d353')
+}
 
-DARK_HALLOWEEN_LEVEL_1 = RGB('#631c03')
-DARK_HALLOWEEN_LEVEL_2 = RGB('#bd561d')
-DARK_HALLOWEEN_LEVEL_3 = RGB('#fa7a18')
-DARK_HALLOWEEN_LEVEL_4 = RGB('#fddf68')
+DARK_HALLOWEEN_COLOR = {
+    1 : RGB('#631c03'),
+    2 : RGB('#bd561d'),
+    3 : RGB('#fa7a18'),
+    4 : RGB('#fddf68')
+}
+
+
+FONT = "Segoe UI"
+SIZE = 12
+LINE = 1
+
+WIDTH = 11
+HEIGHT = 11
+RADIUS = 2
+
+THEME = DARK_THEME
+COLOR = DARK_COLOR
+
 
 # def request_user_input(prompt='> '):
 #     """Request input from the user and return what has been entered."""
@@ -57,10 +77,10 @@ def roundrect(context, x, y, width, height, r):
     context.translate(x, y)
 
     context.new_sub_path()
-    context.arc(r, r, r, math.pi, 3*math.pi/2)
-    context.arc(width-r, r, r, 3*math.pi/2, 0)
-    context.arc(width-r, height-r, r, 0, math.pi/2)
-    context.arc(r, height-r, r, math.pi/2, math.pi)
+    context.arc(r, r, r, math.pi, 3 * math.pi / 2)
+    context.arc(width - r, r, r, 3 * math.pi / 2, 0)
+    context.arc(width - r, height - r, r, 0, math.pi / 2)
+    context.arc(r, height - r, r, math.pi / 2, math.pi)
     context.close_path()
 
     context.restore()
@@ -76,13 +96,16 @@ def compute_rgb(background, level, green):
 
     red = background[0] - (background[0] -  level[0]) / alpha
     blue = background[2] - (background[2] -  level[2]) / alpha
-    return (math.ceil(red), green, math.ceil(blue), math.ceil(alpha*100)/100) if red >= 0 and red < 256 and blue >= 0 and blue < 256 else None
+    if red >= 0 and red < 256 and blue >= 0 and blue < 256:
+        return (math.ceil(red), green, math.ceil(blue), math.ceil(alpha * 100) / 100)
+    else:
+        return None
 
 def check_green(green):
-    l1 = compute_rgb(LIGHT_BACKGROUND, LIGHT_LEVEL_1, green)
-    l2 = compute_rgb(LIGHT_BACKGROUND, LIGHT_LEVEL_2, green)
-    l3 = compute_rgb(LIGHT_BACKGROUND, LIGHT_LEVEL_3, green)
-    l4 = compute_rgb(LIGHT_BACKGROUND, LIGHT_LEVEL_4, green)
+    l1 = compute_rgb(THEME['graph'], COLOR[1], green)
+    l2 = compute_rgb(THEME['graph'], COLOR[2], green)
+    l3 = compute_rgb(THEME['graph'], COLOR[3], green)
+    l4 = compute_rgb(THEME['graph'], COLOR[4], green)
 
     # if (l1 and l2 and l3 and l4):
     #         # and abs(np.subtract(l1[0:3], l2[0:3])).max() < 1
@@ -113,14 +136,14 @@ def main():
         # context.set_operator(cairo.OPERATOR_SOURCE)
 
         context.save()
-        context.set_source_rgb(*LIGHT)
+        context.set_source_rgb(*THEME['background'])
         context.paint()
         context.restore()
 
         # -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"
-        context.select_font_face("Segoe UI", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-        context.set_source_rgb(*LIGHT_FONT)
-        context.set_font_size(12)
+        context.select_font_face(FONT, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+        context.set_source_rgb(*THEME['font'])
+        context.set_font_size(SIZE)
 
         context.move_to(0, 45)
         context.show_text("Mon")
@@ -129,19 +152,19 @@ def main():
         context.move_to(0, 105)
         context.show_text("Fri")
 
-        context.set_line_width(1)
+        context.set_line_width(LINE)
 
         context.save()
         context.translate(31, 20)
         for x in range(53):
             for y in range(7):
-                roundrect(context, 15*x, 15*y, 11, 11, 2)
-                context.set_source_rgb(*LIGHT_LEVEL_1)
+                roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
+                context.set_source_rgb(*THEME['graph'])
                 context.fill_preserve()
                 context.stroke()
 
-                roundrect(context, 15*x, 15*y, 11, 11, 2)
-                context.set_source_rgba(*LIGHT_BORDER, LIGHT_ALPHA)
+                roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
+                context.set_source_rgba(*THEME['border'], THEME['alpha'])
                 context.stroke()
 
         context.restore()
