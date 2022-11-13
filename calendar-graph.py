@@ -91,7 +91,8 @@ def calendar_graph(context):
     context.set_line_width(LINE)
     context.paint()
 
-    context.select_font_face(FONT, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+    context.select_font_face(FONT, cairo.FONT_SLANT_NORMAL,
+        cairo.FONT_WEIGHT_NORMAL)
     context.set_source_rgb(*THEME['font'])
     context.set_font_size(SIZE)
 
@@ -117,11 +118,17 @@ def calendar_graph(context):
     context.restore()
 
 def contributions(year):
-    calendar = requests.get('{}/users/{}/contributions'.format(GIT_BASE, USERNAME)
-        , params={'from': '{}-01-01'.format(year)})
+    calendar = requests.get(
+        '{}/users/{}/contributions'.format(GIT_BASE, USERNAME),
+        params={'from': '{}-01-01'.format(year)})
 
     for rect in BeautifulSoup(calendar.text, "html.parser").find_all('rect'):
-        print(rect.get('data-date'))
+        day = rect.get('data-date')
+        if day:
+            count = int(rect.get('data-count'))
+            if count:
+                yield date.fromisoformat(day), {'count' : count,
+                    'level' : int(rect.get('data-level'))}
 
 def main():
     # calendar = requests.get('https://github.com/users/Victor-Y-Fadeev/contributions'
@@ -129,7 +136,8 @@ def main():
     # for rect in BeautifulSoup(calendar.text, "html.parser").find_all('rect'):
     #     print(rect.get('data-date'))
 
-    contributions(date.today().year)
+    cur = dict(contributions(date.today().year))
+    print(cur[date.fromisoformat('2022-02-28')]['level'])
 
     # cur = calendar.Calendar()
     # cur.setfirstweekday(calendar.SUNDAY)
