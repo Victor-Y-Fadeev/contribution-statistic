@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 
-# import requests
+import requests
 # import colorsys
+import calendar
 import cairo
 import math
 from bs4 import BeautifulSoup
+from datetime import date
 
+
+FOUNDED = 2008
+GIT_BASE = 'https://github.com'
+USERNAME = 'Victor-Y-Fadeev'
 
 RGB = lambda color: tuple(int(color[i:i + 2], 16) / 255 for i in (1, 3, 5))
 
@@ -110,15 +116,30 @@ def calendar_graph(context):
 
     context.restore()
 
+def contributions(year):
+    calendar = requests.get('{}/users/{}/contributions'.format(GIT_BASE, USERNAME)
+        , params={'from': '{}-01-01'.format(year)})
+
+    for rect in BeautifulSoup(calendar.text, "html.parser").find_all('rect'):
+        print(rect.get('data-date'))
+
 def main():
     # calendar = requests.get('https://github.com/users/Victor-Y-Fadeev/contributions'
     #     , params={'to': '2021-12-31'})
     # for rect in BeautifulSoup(calendar.text, "html.parser").find_all('rect'):
     #     print(rect.get('data-date'))
 
-    with cairo.SVGSurface("calendar-graph.svg", 823, 128) as surface:
-        context = cairo.Context(surface)
-        calendar_graph(context)
+    contributions(date.today().year)
+
+    # cur = calendar.Calendar()
+    # cur.setfirstweekday(calendar.SUNDAY)
+    # for i in cur.yeardayscalendar(date.today().year, 1):
+    #     print(i)
+    #     print()
+
+    # with cairo.SVGSurface("calendar-graph.svg", 823, 128) as surface:
+    #     context = cairo.Context(surface)
+    #     calendar_graph(context)
 
 if __name__ == '__main__':
     main()
