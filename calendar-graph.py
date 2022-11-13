@@ -5,6 +5,7 @@ import requests
 import calendar
 import cairo
 import math
+import json
 from bs4 import BeautifulSoup
 from datetime import date
 
@@ -12,6 +13,10 @@ from datetime import date
 FOUNDED = 2008
 GIT_BASE = 'https://github.com'
 USERNAME = 'Victor-Y-Fadeev'
+
+SVG = "calendar-graph.svg"
+JSON = "calendar-graph.json"
+
 
 RGB = lambda color: tuple(int(color[i:i + 2], 16) / 255 for i in (1, 3, 5))
 
@@ -117,7 +122,7 @@ def calendar_graph(context):
 
     context.restore()
 
-def contributions(year):
+def github(year):
     calendar = requests.get(
         '{}/users/{}/contributions'.format(GIT_BASE, USERNAME),
         params={'from': '{}-01-01'.format(year)})
@@ -130,14 +135,25 @@ def contributions(year):
                 yield date.fromisoformat(day), {'count' : count,
                     'level' : int(rect.get('data-level'))}
 
-def main():
-    # calendar = requests.get('https://github.com/users/Victor-Y-Fadeev/contributions'
-    #     , params={'to': '2021-12-31'})
-    # for rect in BeautifulSoup(calendar.text, "html.parser").find_all('rect'):
-    #     print(rect.get('data-date'))
+def contributions():
+    for year in range(FOUNDED, date.today().year + 1):
+        for item in github(year):
+            yield item
 
-    cur = dict(contributions(date.today().year))
-    print(cur[date.fromisoformat('2022-02-28')]['level'])
+def save(data):
+    with open(JSON, "w") as file:
+        json.dump(dict((key.isoformat(), value)
+            for key, value in data.items()), file)
+
+def load():
+    with open(JSON, "r") as file:
+        return dict((date.fromisoformat(key), value)
+            for key, value in json.load(file).items())
+
+def main():
+
+    save(dict(contributions()))
+    print(load())
 
     # cur = calendar.Calendar()
     # cur.setfirstweekday(calendar.SUNDAY)
