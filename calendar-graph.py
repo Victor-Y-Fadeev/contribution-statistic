@@ -110,25 +110,11 @@ def calendar_graph(context, data):
     context.move_to(0, 105)
     context.show_text('Fri')
 
-
-    context.move_to(31, 12)
-    context.show_text('Jan')
-    # print(max(data).year)
-    # print(date.fromisocalendar(2021, 52, 7).isocalendar())
-    # print(date.fromisocalendar(2021, 52, 7))
-    # print(date.fromisocalendar(2022, 1, 7))
     weeks = calendar.Calendar()
     weeks.setfirstweekday(calendar.SUNDAY)
-    print(weeks.yeardayscalendar(date.today().year, 1))
-    print()
-
-    # weeks = [len(i[0]) if i[0][-1][-1] != 0 else len(i[0]) - 1
-    #     for i in weeks.yeardayscalendar(date.today().year, 1)]
-
-    weeks = [(len(i[0]) - int(i[0][-1][0].month != i[0][-1][-1].month), i[0][0][-1].strftime('%b'))
-        for i in weeks.yeardatescalendar(date.today().year, 1)]
-    print(weeks)
-
+    weeks = [(len(i[0]) - int(i[0][-1][0].month != i[0][-1][-1].month
+        and i[0][-1][0].month != 1), i[0][0][-1].strftime('%b'))
+            for i in weeks.yeardatescalendar(date.today().year, 1)]
 
     context.save()
     context.translate(31, 12)
@@ -136,22 +122,6 @@ def calendar_graph(context, data):
         context.move_to(0, 0)
         context.show_text(week[1])
         context.translate(15 * week[0], 0)
-
-    # print(weeks)
-    # context.move_to(31 + 15 * weeks[0], 12)
-    # context.show_text('Feb')
-    # context.show_text('Mar')
-    # context.show_text('Apr')
-    # context.show_text('May')
-    # context.show_text('Jun')
-    # context.show_text('Jul')
-    # context.show_text('Aug')
-    # context.show_text('Sep')
-    # context.show_text('Oct')
-    # context.show_text('Nov')
-    # context.show_text('Dec')
-    # print( cur.yeardayscalendar(date.today().year, 1))
-
 
     context.restore()
     context.translate(31, 20)
