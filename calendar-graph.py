@@ -10,12 +10,14 @@ from bs4 import BeautifulSoup
 from datetime import date
 
 
-FOUNDED = 2008
 GIT_BASE = 'https://github.com'
 USERNAME = 'Victor-Y-Fadeev'
 
-SVG = "calendar-graph.svg"
-JSON = "calendar-graph.json"
+FOUNDED = 2008
+YEAR = date.today().year
+
+SVG = 'calendar-graph.svg'
+JSON = 'calendar-graph.json'
 
 
 RGB = lambda color: tuple(int(color[i:i + 2], 16) / 255 for i in (1, 3, 5))
@@ -65,7 +67,7 @@ DARK_HALLOWEEN_COLOR = {
 }
 
 
-FONT = "Segoe UI"
+FONT = 'Segoe UI'
 SIZE = 12
 LINE = 1
 
@@ -90,7 +92,7 @@ def roundrect(context, x, y, width, height, r):
 
     context.restore()
 
-def calendar_graph(context):
+def calendar_graph(context, data):
     context.save()
     context.set_source_rgb(*THEME['background'])
     context.set_line_width(LINE)
@@ -102,12 +104,56 @@ def calendar_graph(context):
     context.set_font_size(SIZE)
 
     context.move_to(0, 45)
-    context.show_text("Mon")
+    context.show_text('Mon')
     context.move_to(0, 76)
-    context.show_text("Wed")
+    context.show_text('Wed')
     context.move_to(0, 105)
-    context.show_text("Fri")
+    context.show_text('Fri')
 
+
+    context.move_to(31, 12)
+    context.show_text('Jan')
+    # print(max(data).year)
+    # print(date.fromisocalendar(2021, 52, 7).isocalendar())
+    # print(date.fromisocalendar(2021, 52, 7))
+    # print(date.fromisocalendar(2022, 1, 7))
+    weeks = calendar.Calendar()
+    weeks.setfirstweekday(calendar.SUNDAY)
+    print(weeks.yeardayscalendar(date.today().year, 1))
+    print()
+
+    # weeks = [len(i[0]) if i[0][-1][-1] != 0 else len(i[0]) - 1
+    #     for i in weeks.yeardayscalendar(date.today().year, 1)]
+
+    weeks = [(len(i[0]) - int(i[0][-1][0].month != i[0][-1][-1].month), i[0][0][-1].strftime('%b'))
+        for i in weeks.yeardatescalendar(date.today().year, 1)]
+    print(weeks)
+
+
+    context.save()
+    context.translate(31, 12)
+    for week in weeks:
+        context.move_to(0, 0)
+        context.show_text(week[1])
+        context.translate(15 * week[0], 0)
+
+    # print(weeks)
+    # context.move_to(31 + 15 * weeks[0], 12)
+    # context.show_text('Feb')
+    # context.show_text('Mar')
+    # context.show_text('Apr')
+    # context.show_text('May')
+    # context.show_text('Jun')
+    # context.show_text('Jul')
+    # context.show_text('Aug')
+    # context.show_text('Sep')
+    # context.show_text('Oct')
+    # context.show_text('Nov')
+    # context.show_text('Dec')
+    # print( cur.yeardayscalendar(date.today().year, 1))
+
+
+    context.restore()
     context.translate(31, 20)
     for x in range(53):
         for y in range(7):
@@ -127,7 +173,7 @@ def github(year):
         '{}/users/{}/contributions'.format(GIT_BASE, USERNAME),
         params={'from': '{}-01-01'.format(year)})
 
-    for rect in BeautifulSoup(calendar.text, "html.parser").find_all('rect'):
+    for rect in BeautifulSoup(calendar.text, 'html.parser').find_all('rect'):
         day = rect.get('data-date')
         if day:
             count = int(rect.get('data-count'))
@@ -136,34 +182,26 @@ def github(year):
                     'level' : int(rect.get('data-level'))}
 
 def contributions():
-    for year in range(FOUNDED, date.today().year + 1):
+    for year in range(FOUNDED, YEAR + 1):
         for item in github(year):
             yield item
 
 def save(data):
-    with open(JSON, "w") as file:
+    with open(JSON, 'w') as file:
         json.dump(dict((key.isoformat(), value)
             for key, value in data.items()), file)
 
 def load():
-    with open(JSON, "r") as file:
+    with open(JSON, 'r') as file:
         return dict((date.fromisoformat(key), value)
             for key, value in json.load(file).items())
 
 def main():
+    # save(dict(contributions()))
 
-    save(dict(contributions()))
-    print(load())
-
-    # cur = calendar.Calendar()
-    # cur.setfirstweekday(calendar.SUNDAY)
-    # for i in cur.yeardayscalendar(date.today().year, 1):
-    #     print(i)
-    #     print()
-
-    # with cairo.SVGSurface("calendar-graph.svg", 823, 128) as surface:
-    #     context = cairo.Context(surface)
-    #     calendar_graph(context)
+    with cairo.SVGSurface(SVG, 823, 128) as surface:
+        context = cairo.Context(surface)
+        calendar_graph(context, load())
 
 if __name__ == '__main__':
     main()
