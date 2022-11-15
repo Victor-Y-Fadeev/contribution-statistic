@@ -92,6 +92,29 @@ def roundrect(context, x, y, width, height, r):
 
     context.restore()
 
+def generator(n):
+    for difference in range(1, 1 + math.floor(240 / (n - 1))):
+        for initial in range(241 - difference * (n - 1)):
+            yield (abs(n * (initial + difference * (n - 1) / 2) - 360)
+                + abs(n * difference - 360), initial, difference)
+
+def generate_color(n):
+    progression = min(generator(n), key=lambda x: x[0])[1:]
+    print([progression[0] + i * progression[1] for i in range(n)])
+
+def calendar_table(context, data):
+    generate_color(6)
+    for x in range(53):
+        for y in range(7):
+            roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
+            context.set_source_rgb(*THEME['graph'])
+            context.fill_preserve()
+            context.stroke()
+
+            roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
+            context.set_source_rgba(*THEME['border'], THEME['alpha'])
+            context.stroke()
+
 def calendar_graph(context, data):
     context.save()
     context.set_source_rgb(*THEME['background'])
@@ -112,9 +135,9 @@ def calendar_graph(context, data):
 
     weeks = calendar.Calendar()
     weeks.setfirstweekday(calendar.SUNDAY)
-    weeks = [(len(i[0]) - int(i[0][-1][0].month != i[0][-1][-1].month
-        and i[0][-1][0].month != 1), i[0][0][-1].strftime('%b'))
-            for i in weeks.yeardatescalendar(date.today().year, 1)]
+    weeks = [(len(i[0]) - int(i[0][0][0].month != i[0][0][-1].month
+        and i[0][0][-1].month != 1), i[0][0][-1].strftime('%b'))
+            for i in weeks.yeardatescalendar(max(data).year, 1)]
 
     context.save()
     context.translate(31, 12)
@@ -125,17 +148,7 @@ def calendar_graph(context, data):
 
     context.restore()
     context.translate(31, 20)
-    for x in range(53):
-        for y in range(7):
-            roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
-            context.set_source_rgb(*THEME['graph'])
-            context.fill_preserve()
-            context.stroke()
-
-            roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
-            context.set_source_rgba(*THEME['border'], THEME['alpha'])
-            context.stroke()
-
+    calendar_table(context, data)
     context.restore()
 
 def github(year):
@@ -167,11 +180,13 @@ def load():
             for key, value in json.load(file).items())
 
 def main():
-    # save(dict(contributions()))
+    # data = dict(contributions())
+    # save(data)
+    data = load()
 
     with cairo.SVGSurface(SVG, 823, 128) as surface:
         context = cairo.Context(surface)
-        calendar_graph(context, load())
+        calendar_graph(context, data)
 
 if __name__ == '__main__':
     main()
