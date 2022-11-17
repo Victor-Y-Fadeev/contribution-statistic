@@ -2,6 +2,7 @@
 
 import requests
 # import colorsys
+# import itertools
 import calendar
 import cairo
 import math
@@ -102,8 +103,22 @@ def generate_color(n):
     progression = min(generator(n), key=lambda x: x[0])[1:]
     print([progression[0] + i * progression[1] for i in range(n)])
 
+def coordinates(day):
+    location = int(day.strftime('%j')) + (day.replace(month=1, day=1).weekday() + 1) % 7
+    return location
+
 def calendar_table(context, data):
-    generate_color(6)
+    first = min(data).year
+    last = max(data).year
+
+    location = lambda day: ((day.replace(month=1, day=1).weekday() + 1) % 7
+                            + int(day.strftime('%j')))
+
+    converted = dict(((math.floor(loc / 7), loc % 7), dict((day.year, value)
+        for day, value in data.items() if location(day) == loc))
+            for loc in range(53 * 7))
+
+    # generate_color(10)
     for x in range(53):
         for y in range(7):
             roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
@@ -135,9 +150,9 @@ def calendar_graph(context, data):
 
     weeks = calendar.Calendar()
     weeks.setfirstweekday(calendar.SUNDAY)
-    weeks = [(len(i[0]) - int(i[0][0][0].month != i[0][0][-1].month
+    weeks = ((len(i[0]) - int(i[0][0][0].month != i[0][0][-1].month
         and i[0][0][-1].month != 1), i[0][0][-1].strftime('%b'))
-            for i in weeks.yeardatescalendar(max(data).year, 1)]
+            for i in weeks.yeardatescalendar(max(data).year, 1))
 
     context.save()
     context.translate(31, 12)
