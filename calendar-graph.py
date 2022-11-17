@@ -2,7 +2,6 @@
 
 import requests
 # import colorsys
-# import itertools
 import calendar
 import cairo
 import math
@@ -93,42 +92,39 @@ def roundrect(context, x, y, width, height, r):
 
     context.restore()
 
-def generator(n):
-    for difference in range(1, 1 + math.floor(240 / (n - 1))):
-        for initial in range(241 - difference * (n - 1)):
-            yield (abs(n * (initial + difference * (n - 1) / 2) - 360)
-                + abs(n * difference - 360), initial, difference)
-
-def generate_color(n):
-    progression = min(generator(n), key=lambda x: x[0])[1:]
-    print([progression[0] + i * progression[1] for i in range(n)])
-
-def coordinates(day):
-    location = int(day.strftime('%j')) + (day.replace(month=1, day=1).weekday() + 1) % 7
-    return location
+def mix_color(palette):
+    return (1, 1, 1)
 
 def calendar_table(context, data):
-    first = min(data).year
-    last = max(data).year
+    weekday = lambda day: (day.weekday() + 1) % 7
+    location = lambda day: (weekday(date(day.year, 1, 1))
+                            + int(day.strftime('%j')) - 1)
 
-    location = lambda day: ((day.replace(month=1, day=1).weekday() + 1) % 7
-                            + int(day.strftime('%j')))
-
-    converted = dict(((math.floor(loc / 7), loc % 7), dict((day.year, value)
+    current = max(data).year
+    merged = dict(((math.floor(loc / 7), loc % 7), dict((day.year, value)
         for day, value in data.items() if location(day) == loc))
-            for loc in range(53 * 7))
+            for loc in range(weekday(date(current, 1, 1)),
+                52 * 7 + 1 + weekday(date(current, 12, 31))))
 
-    # generate_color(10)
-    for x in range(53):
-        for y in range(7):
-            roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
+    first = min(data).year
+    converted = dict((loc, (mix_color(tuple(int(year in value)
+        for year in range(first, current + 1))), max(level['level']
+            for level in value.values())) if value else None)
+                for loc, value in merged.items())
+
+    for (x, y), color in converted.items():
+        if color:
+            context.set_source_rgb(*COLOR[color[1]])
+        else:
             context.set_source_rgb(*THEME['graph'])
-            context.fill_preserve()
-            context.stroke()
 
-            roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
-            context.set_source_rgba(*THEME['border'], THEME['alpha'])
-            context.stroke()
+        roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
+        context.fill_preserve()
+        context.stroke()
+
+        roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
+        context.set_source_rgba(*THEME['border'], THEME['alpha'])
+        context.stroke()
 
 def calendar_graph(context, data):
     context.save()
@@ -198,6 +194,7 @@ def main():
     # data = dict(contributions())
     # save(data)
     data = load()
+    # data = dict(filter(lambda item: item[0].year == 2021, data.items()))
 
     with cairo.SVGSurface(SVG, 823, 128) as surface:
         context = cairo.Context(surface)
