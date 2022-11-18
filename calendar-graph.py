@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import requests
-# import colorsys
 import calendar
+import colorsys
 import cairo
 import math
 import json
@@ -75,8 +75,9 @@ WIDTH = 11
 HEIGHT = 11
 RADIUS = 2
 
-THEME = LIGHT_THEME
-COLOR = LIGHT_COLOR
+THEME = DARK_THEME
+COLOR = DARK_COLOR
+SHIFT = 30 / 360
 
 
 def roundrect(context, x, y, width, height, r):
@@ -93,7 +94,14 @@ def roundrect(context, x, y, width, height, r):
     context.restore()
 
 def mix_color(palette):
-    return (1, 1, 1)
+    colors = tuple(colorsys.hsv_to_rgb(SHIFT + i / len(palette), 1, 1)
+        for i in range(len(palette)) if palette[i])
+
+    mixed = colorsys.rgb_to_hsv(sum(i[0] for i in colors) / len(colors),
+                                sum(i[1] for i in colors) / len(colors),
+                                sum(i[2] for i in colors) / len(colors))
+
+    return colorsys.hsv_to_rgb(mixed[0], mixed[1], 1)
 
 def calendar_table(context, data):
     weekday = lambda day: (day.weekday() + 1) % 7
@@ -114,7 +122,8 @@ def calendar_table(context, data):
 
     for (x, y), color in converted.items():
         if color:
-            context.set_source_rgb(*COLOR[color[1]])
+            context.set_source_rgb(*color[0])
+            # context.set_source_rgb(*COLOR[color[1]])
         else:
             context.set_source_rgb(*THEME['graph'])
 
