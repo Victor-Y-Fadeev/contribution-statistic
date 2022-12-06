@@ -52,6 +52,13 @@ LIGHT_HALLOWEEN_COLOR = {
     4 : RGB('#03001c')
 }
 
+LIGHT_GITLAB_COLOR = {
+    1 : RGB('#acd5f2'),
+    2 : RGB('#7fa8c9'),
+    3 : RGB('#527ba0'),
+    4 : RGB('#254e77')
+}
+
 DARK_COLOR = {
     1 : RGB('#0e4429'),
     2 : RGB('#006d32'),
@@ -66,6 +73,13 @@ DARK_HALLOWEEN_COLOR = {
     4 : RGB('#fddf68')
 }
 
+DARK_GITLAB_COLOR = {
+    1 : RGB('#333861'),
+    2 : RGB('#4a5593'),
+    3 : RGB('#6172c5'),
+    4 : RGB('#788ff7')
+}
+
 
 FONT = 'Segoe UI'
 SIZE = 12
@@ -76,8 +90,8 @@ HEIGHT = 11
 RADIUS = 2
 
 THEME = DARK_THEME
-COLOR = DARK_COLOR
-SHIFT = 30 / 360
+COLOR = DARK_GITLAB_COLOR
+SHIFT = 0 / 360
 
 
 def roundrect(context, x, y, width, height, r):
@@ -122,8 +136,8 @@ def calendar_table(context, data):
 
     for (x, y), color in converted.items():
         if color:
-            context.set_source_rgb(*color[0])
-            # context.set_source_rgb(*COLOR[color[1]])
+            # context.set_source_rgb(*color[0])
+            context.set_source_rgb(*COLOR[color[1]])
         else:
             context.set_source_rgb(*THEME['graph'])
 
