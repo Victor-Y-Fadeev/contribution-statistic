@@ -103,7 +103,7 @@ HEIGHT = 11
 RADIUS = 2
 
 THEME = DARK_THEME
-COLOR = DARK_HALLOWEEN_COLOR
+COLOR = DARK_GITLAB_COLOR
 SHIFT = 0 / 360
 
 
@@ -121,15 +121,21 @@ def roundrect(context: Context, x: float, y: float,
 
     context.restore()
 
-def mix_color(palette):
+def mix_color(palette: tuple[int, ...]) -> tuple[float, float, float]:
     colors = tuple(colorsys.hsv_to_rgb(SHIFT + i / len(palette), 1, 1)
         for i in range(len(palette)) if palette[i])
+    if not colors:
+        return THEME['graph']
 
     mixed = colorsys.rgb_to_hsv(sum(i[0] for i in colors) / len(colors),
                                 sum(i[1] for i in colors) / len(colors),
                                 sum(i[2] for i in colors) / len(colors))
 
     return colorsys.hsv_to_rgb(mixed[0], mixed[1], 1)
+
+def get_color(palette: tuple[int, ...]) -> tuple[float, float, float]:
+    level = max(palette)
+    return COLOR[level] if level else THEME['graph']
 
 def calendar_table(context: Context, data: dict[date, dict[str, int]]):
     weekday = lambda day: (day.weekday() + 1) % 7
@@ -143,19 +149,13 @@ def calendar_table(context: Context, data: dict[date, dict[str, int]]):
                 52 * 7 + 1 + weekday(date(current, 12, 31))))
 
     first = min(data).year
-    converted = dict((loc, (mix_color(tuple(int(year in value)
-        for year in range(first, current + 1))), max(level['level']
-            for level in value.values())) if value else None)
-                for loc, value in merged.items())
+    converted = dict((loc, tuple(value[year]['level'] if value and year in value
+        else 0 for year in range(first, current + 1)))
+            for loc, value in merged.items())
 
-    for (x, y), color in converted.items():
-        if color:
-            # context.set_source_rgb(*color[0])
-            context.set_source_rgb(*COLOR[color[1]])
-        else:
-            context.set_source_rgb(*THEME['graph'])
-
+    for (x, y), palette in converted.items():
         roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
+        context.set_source_rgb(*get_color(palette))
         context.fill_preserve()
         context.stroke()
 
