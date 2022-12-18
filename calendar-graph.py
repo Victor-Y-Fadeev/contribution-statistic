@@ -3,12 +3,13 @@
 import requests
 import calendar
 import colorsys
-import cairo
 import math
 import json
 import os
+from typing import Iterator
 from bs4 import BeautifulSoup
 from datetime import date
+from cairo import SVGSurface, Context, FontSlant, FontWeight
 
 
 FOUNDED = 2008
@@ -102,11 +103,12 @@ HEIGHT = 11
 RADIUS = 2
 
 THEME = DARK_THEME
-COLOR = DARK_GITLAB_COLOR
+COLOR = DARK_HALLOWEEN_COLOR
 SHIFT = 0 / 360
 
 
-def roundrect(context, x, y, width, height, r):
+def roundrect(context: Context, x: float, y: float,
+              width: float, height: float, r: float):
     context.save()
     context.translate(x, y)
 
@@ -129,7 +131,7 @@ def mix_color(palette):
 
     return colorsys.hsv_to_rgb(mixed[0], mixed[1], 1)
 
-def calendar_table(context, data):
+def calendar_table(context: Context, data: dict[date, dict[str, int]]):
     weekday = lambda day: (day.weekday() + 1) % 7
     location = lambda day: (weekday(date(day.year, 1, 1))
                             + int(day.strftime('%j')) - 1)
@@ -161,14 +163,13 @@ def calendar_table(context, data):
         context.set_source_rgba(*THEME['border'], THEME['alpha'])
         context.stroke()
 
-def calendar_graph(context, data):
+def calendar_graph(context: Context, data: dict[date, dict[str, int]]):
     context.save()
     context.set_source_rgb(*THEME['background'])
     context.set_line_width(LINE)
     context.paint()
 
-    context.select_font_face(FONT, cairo.FONT_SLANT_NORMAL,
-        cairo.FONT_WEIGHT_NORMAL)
+    context.select_font_face(FONT, FontSlant.NORMAL, FontWeight.NORMAL)
     context.set_source_rgb(*THEME['font'])
     context.set_font_size(SIZE)
 
@@ -197,7 +198,7 @@ def calendar_graph(context, data):
     calendar_table(context, data)
     context.restore()
 
-def contributions(username):
+def contributions(username: str) -> Iterator[tuple[date, dict[str, int]]]:
     for year in range(FOUNDED, date.today().year + 1):
         calendar = requests.get(
             '{}/users/{}/contributions'.format(GIT_BASE, username),
@@ -212,12 +213,12 @@ def contributions(username):
                     yield date.fromisoformat(day), {'count' : count,
                         'level' : int(rect.get('data-level'))}
 
-def save(data):
+def save(data: dict[date, dict[str, int]]):
     with open(JSON, 'w') as file:
         json.dump(dict((key.isoformat(), value)
             for key, value in data.items()), file)
 
-def load():
+def load() -> dict[date, dict[str, int]]:
     with open(JSON, 'r') as file:
         return dict((date.fromisoformat(key), value)
             for key, value in json.load(file).items())
@@ -228,8 +229,8 @@ def main():
     data = load()
     # data = dict(filter(lambda item: item[0].year == 2021, data.items()))
 
-    with cairo.SVGSurface(SVG, 823, 128) as surface:
-        context = cairo.Context(surface)
+    with SVGSurface(SVG, 823, 128) as surface:
+        context = Context(surface)
         calendar_graph(context, data)
 
 if __name__ == '__main__':
