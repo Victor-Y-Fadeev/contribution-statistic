@@ -6,18 +6,16 @@ import colorsys
 import cairo
 import math
 import json
+import os
 from bs4 import BeautifulSoup
 from datetime import date
 
 
-GIT_BASE = 'https://github.com'
-USERNAME = 'Victor-Y-Fadeev'
-
 FOUNDED = 2008
-YEAR = date.today().year
+GIT_BASE = 'https://github.com'
 
-SVG = 'calendar-graph.svg'
-JSON = 'calendar-graph.json'
+SVG = '{}.svg'.format(os.path.splitext(__file__)[0])
+JSON = '{}.json'.format(os.path.splitext(__file__)[0])
 
 
 RGB = lambda color: tuple(int(color[i:i + 2], 16) / 255 for i in (1, 3, 5))
@@ -35,7 +33,7 @@ DARK_THEME = {
     'font'      : RGB('#c9d1d9'),
     'graph'     : RGB('#161b22'),
     'border'    : RGB('#ffffff'),
-    'alpha'     : 0.05
+    'alpha'     : 0.06
 }
 
 LIGHT_COLOR = {
@@ -59,6 +57,13 @@ LIGHT_GITLAB_COLOR = {
     4 : RGB('#254e77')
 }
 
+LIGHT_NEW_COLOR = {
+    1 : RGB('#d2dcff'),
+    2 : RGB('#7992f5'),
+    3 : RGB('#3f51ae'),
+    4 : RGB('#2a2b59')
+}
+
 DARK_COLOR = {
     1 : RGB('#0e4429'),
     2 : RGB('#006d32'),
@@ -78,6 +83,13 @@ DARK_GITLAB_COLOR = {
     2 : RGB('#4a5593'),
     3 : RGB('#6172c5'),
     4 : RGB('#788ff7')
+}
+
+DARK_NEW_COLOR = {
+    1 : RGB('#303470'),
+    2 : RGB('#4e65cd'),
+    3 : RGB('#97acff'),
+    4 : RGB('#e9ebff')
 }
 
 
@@ -185,23 +197,20 @@ def calendar_graph(context, data):
     calendar_table(context, data)
     context.restore()
 
-def github(year):
-    calendar = requests.get(
-        '{}/users/{}/contributions'.format(GIT_BASE, USERNAME),
-        params={'from': '{}-01-01'.format(year)})
+def contributions(username):
+    for year in range(FOUNDED, date.today().year + 1):
+        calendar = requests.get(
+            '{}/users/{}/contributions'.format(GIT_BASE, username),
+            params={'from': '{}-01-01'.format(year)})
 
-    for rect in BeautifulSoup(calendar.text, 'html.parser').find_all('rect'):
-        day = rect.get('data-date')
-        if day:
-            count = int(rect.get('data-count'))
-            if count:
-                yield date.fromisoformat(day), {'count' : count,
-                    'level' : int(rect.get('data-level'))}
-
-def contributions():
-    for year in range(FOUNDED, YEAR + 1):
-        for item in github(year):
-            yield item
+        for rect in BeautifulSoup(calendar.text,
+                                  'html.parser').find_all('rect'):
+            day = rect.get('data-date')
+            if day:
+                count = int(rect.get('data-count'))
+                if count:
+                    yield date.fromisoformat(day), {'count' : count,
+                        'level' : int(rect.get('data-level'))}
 
 def save(data):
     with open(JSON, 'w') as file:
@@ -214,7 +223,7 @@ def load():
             for key, value in json.load(file).items())
 
 def main():
-    # data = dict(contributions())
+    # data = dict(contributions('Victor-Y-Fadeev'))
     # save(data)
     data = load()
     # data = dict(filter(lambda item: item[0].year == 2021, data.items()))
