@@ -103,23 +103,10 @@ HEIGHT = 11
 RADIUS = 2
 
 THEME = DARK_THEME
-COLOR = DARK_GITLAB_COLOR
-SHIFT = 0 / 360
+COLOR = DARK_NEW_COLOR
+SHIFT = 30 / 360
+TEXT = 'Learn how we count contributions'
 
-
-def roundrect(context: Context, x: float, y: float,
-              width: float, height: float, r: float):
-    context.save()
-    context.translate(x, y)
-
-    context.new_sub_path()
-    context.arc(r, r, r, math.pi, 3 * math.pi / 2)
-    context.arc(width - r, r, r, 3 * math.pi / 2, 0)
-    context.arc(width - r, height - r, r, 0, math.pi / 2)
-    context.arc(r, height - r, r, math.pi / 2, math.pi)
-    context.close_path()
-
-    context.restore()
 
 def mix_color(palette: tuple[int, ...]) -> tuple[float, float, float]:
     colors = tuple(colorsys.hsv_to_rgb(SHIFT + i / len(palette), 1, 1)
@@ -135,7 +122,27 @@ def mix_color(palette: tuple[int, ...]) -> tuple[float, float, float]:
 
 def get_color(palette: tuple[int, ...]) -> tuple[float, float, float]:
     level = max(palette)
-    return COLOR[level] if level else THEME['graph']
+    if not level:
+        return THEME['graph']
+    if not SHIFT:
+        return COLOR[level]
+
+    hsv = colorsys.rgb_to_hsv(*COLOR[level])
+    return colorsys.hsv_to_rgb(SHIFT + hsv[0], hsv[1], hsv[2])
+
+def roundrect(context: Context, x: float, y: float,
+              width: float, height: float, r: float):
+    context.save()
+    context.translate(x, y)
+
+    context.new_sub_path()
+    context.arc(r, r, r, math.pi, 3 * math.pi / 2)
+    context.arc(width - r, r, r, 3 * math.pi / 2, 0)
+    context.arc(width - r, height - r, r, 0, math.pi / 2)
+    context.arc(r, height - r, r, math.pi / 2, math.pi)
+    context.close_path()
+
+    context.restore()
 
 def calendar_table(context: Context, data: dict[date, dict[str, int]]):
     weekday = lambda day: (day.weekday() + 1) % 7
@@ -198,7 +205,25 @@ def calendar_graph(context: Context, data: dict[date, dict[str, int]]):
     calendar_table(context, data)
     context.restore()
 
+def draw_image(data: dict[date, dict[str, int]], width: float, height: float):
+    with SVGSurface(SVG, 823, 128) as surface:
+        context = Context(surface)
+
+        lines = TEXT.split('\n')
+        calendar_graph(context, data)
+
 def contributions(username: str) -> Iterator[tuple[date, dict[str, int]]]:
+    """Pull contributions from GitHub since its founded (2008).
+
+    Args:
+        username: Your GitHub username.
+
+    Returns:
+        Dictionary key-value iterator with date key.
+        Value is a dictionary with two int values.
+        The 'count' key means the number of commits.
+        The 'level' key is the cell light from 1 to 4.
+    """
     for year in range(FOUNDED, date.today().year + 1):
         calendar = requests.get(
             '{}/users/{}/contributions'.format(GIT_BASE, username),
@@ -214,14 +239,28 @@ def contributions(username: str) -> Iterator[tuple[date, dict[str, int]]]:
                         'level' : int(rect.get('data-level'))}
 
 def save(data: dict[date, dict[str, int]]):
+    """Save contribution dictionary to JSON with script matching name.
+
+    Args:
+        data: Dictionary of date keys with commits count and light levels.
+    """
     with open(JSON, 'w') as file:
         json.dump(dict((key.isoformat(), value)
             for key, value in data.items()), file)
 
 def load() -> dict[date, dict[str, int]]:
+    """Load contribution dictionary from JSON with script matching name.
+
+    Returns:
+        Dictionary key-value iterator with date key.
+        Value is a dictionary with two int values.
+        The 'count' key means the number of commits.
+        The 'level' key is the cell light from 1 to 4.
+    """
     with open(JSON, 'r') as file:
         return dict((date.fromisoformat(key), value)
             for key, value in json.load(file).items())
+
 
 def main():
     # data = dict(contributions('Victor-Y-Fadeev'))
