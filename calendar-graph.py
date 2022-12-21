@@ -34,7 +34,7 @@ DARK_THEME = {
     'font'      : RGB('#c9d1d9'),
     'graph'     : RGB('#161b22'),
     'border'    : RGB('#ffffff'),
-    'alpha'     : 0.06
+    'alpha'     : 0.05
 }
 
 LIGHT_COLOR = {
@@ -42,6 +42,13 @@ LIGHT_COLOR = {
     2 : RGB('#40c463'),
     3 : RGB('#30a14e'),
     4 : RGB('#216e39')
+}
+
+LIGHT_WINTER_COLOR = {
+    1 : RGB('#0a3069'),
+    2 : RGB('#0969da'),
+    3 : RGB('#54aeff'),
+    4 : RGB('#b6e3ff')
 }
 
 LIGHT_HALLOWEEN_COLOR = {
@@ -70,6 +77,13 @@ DARK_COLOR = {
     2 : RGB('#006d32'),
     3 : RGB('#26a641'),
     4 : RGB('#39d353')
+}
+
+DARK_WINTER_COLOR = {
+    1 : RGB('#b6e3ff'),
+    2 : RGB('#54aeff'),
+    3 : RGB('#0969da'),
+    4 : RGB('#0a3069')
 }
 
 DARK_HALLOWEEN_COLOR = {
@@ -103,8 +117,8 @@ HEIGHT = 11
 RADIUS = 2
 
 THEME = DARK_THEME
-COLOR = DARK_NEW_COLOR
-SHIFT = 30 / 360
+COLOR = DARK_WINTER_COLOR
+SHIFT = 0 / 360
 TEXT = 'Learn how we count contributions'
 
 
