@@ -31,10 +31,10 @@ LIGHT_THEME = {
 }
 
 DARK_THEME = {
-    'background': RGB('#0d1117'),
+    'background': RGB('#0d1117'), # RGB('#1F1E24'),
     'font'      : RGB('#c9d1d9'),
     'legend'    : RGB('#8b949e'),
-    'graph'     : RGB('#161b22'),
+    'graph'     : RGB('#161b22'), # RGB('#333238'),
     'border'    : RGB('#ffffff'),
     'alpha'     : 0.05
 }
@@ -114,14 +114,14 @@ FONT = 'Segoe UI'
 SIZE = 12
 LINE = 1
 
-WIDTH = 11
-HEIGHT = 11
+CELL = 11
 RADIUS = 2
 
 THEME = DARK_THEME
-COLOR = DARK_WINTER_COLOR
-SHIFT = 60 / 360
+COLOR = DARK_NEW_COLOR
+SHIFT = 30 / 360
 TEXT = 'Learn how we count contributions'
+TEXT = 'Contributions graph merged by week\nTo predict the best productivity'
 
 
 def mix_color(palette: tuple[int, ...]) -> tuple[float, float, float]:
@@ -160,6 +160,17 @@ def roundrect(context: Context, x: float, y: float,
 
     context.restore()
 
+def calendar_cell(context: Context, x: float, y: float, size: float,
+                  color: tuple[float, float, float]):
+    roundrect(context, x, y, size, size, RADIUS)
+    context.set_source_rgb(*color)
+    context.fill_preserve()
+    context.stroke()
+
+    roundrect(context, x, y, size, size, RADIUS)
+    context.set_source_rgba(*THEME['border'], THEME['alpha'])
+    context.stroke()
+
 def calendar_table(context: Context, data: dict[date, int]):
     weekday = lambda day: (day.weekday() + 1) % 7
     location = lambda day: (weekday(date(day.year, 1, 1))
@@ -177,14 +188,7 @@ def calendar_table(context: Context, data: dict[date, int]):
             for loc, value in merged.items())
 
     for (x, y), palette in converted.items():
-        roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
-        context.set_source_rgb(*get_color(palette))
-        context.fill_preserve()
-        context.stroke()
-
-        roundrect(context, 15 * x, 15 * y, WIDTH, HEIGHT, RADIUS)
-        context.set_source_rgba(*THEME['border'], THEME['alpha'])
-        context.stroke()
+        calendar_cell(context, 15 * x, 15 * y, CELL, get_color(palette))
 
 def calendar_graph(context: Context, data: dict[date, int]):
     context.save()
@@ -251,14 +255,8 @@ def draw_image(data: dict[date, int], ratio: float):
 
         between = (120.14 - 25.14 - 33 - 10 * 5) / 4
         for i in range(5):
-            roundrect(context, 814 - 120.14 + 25.14 + (10 + between) * i, 7, 10, 10, RADIUS)
-            context.set_source_rgb(*get_color([i]))
-            context.fill_preserve()
-            context.stroke()
-
-            roundrect(context, 814 - 120.14 + 25.14 + (10 + between) * i, 7, 10, 10, RADIUS)
-            context.set_source_rgba(*THEME['border'], THEME['alpha'])
-            context.stroke()
+            calendar_cell(context, 814 - 120.14 + 25.14 + (10 + between) * i,
+                          7, 10, get_color([i]))
 
 
 def contributions(username: str) -> Iterator[tuple[date, int]]:
@@ -310,10 +308,8 @@ def main():
     data = load()
     # data = dict(filter(lambda item: item[0].year == 2021, data.items()))
 
-    draw_image(data, 149 / 29)
-    # with SVGSurface(SVG, 823, 128) as surface:
-    #     context = Context(surface)
-    #     calendar_graph(context, data)
+    # draw_image(data, 149 / 29)
+    draw_image(data, 4)
 
 if __name__ == '__main__':
     main()
