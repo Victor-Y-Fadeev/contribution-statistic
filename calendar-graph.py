@@ -160,7 +160,7 @@ def roundrect(context: Context, x: float, y: float,
 
     context.restore()
 
-def calendar_table(context: Context, data: dict[date, dict[str, int]]):
+def calendar_table(context: Context, data: dict[date, int]):
     weekday = lambda day: (day.weekday() + 1) % 7
     location = lambda day: (weekday(date(day.year, 1, 1))
                             + int(day.strftime('%j')) - 1)
@@ -172,7 +172,7 @@ def calendar_table(context: Context, data: dict[date, dict[str, int]]):
                 52 * 7 + 1 + weekday(date(current, 12, 31))))
 
     first = min(data).year
-    converted = dict((loc, tuple(value[year]['level'] if value and year in value
+    converted = dict((loc, tuple(value[year] if value and year in value
         else 0 for year in range(first, current + 1)))
             for loc, value in merged.items())
 
@@ -186,7 +186,7 @@ def calendar_table(context: Context, data: dict[date, dict[str, int]]):
         context.set_source_rgba(*THEME['border'], THEME['alpha'])
         context.stroke()
 
-def calendar_graph(context: Context, data: dict[date, dict[str, int]]):
+def calendar_graph(context: Context, data: dict[date, int]):
     context.save()
     context.set_source_rgb(*THEME['font'])
 
@@ -215,7 +215,7 @@ def calendar_graph(context: Context, data: dict[date, dict[str, int]]):
     calendar_table(context, data)
     context.restore()
 
-def draw_image(data: dict[date, dict[str, int]], ratio: float):
+def draw_image(data: dict[date, int], ratio: float):
     lines = TEXT.split('\n')
     title = len(lines) if len(lines) > 0 else 1
 
@@ -235,8 +235,6 @@ def draw_image(data: dict[date, dict[str, int]], ratio: float):
         context.set_font_size(SIZE)
         context.paint()
 
-        context.set_source_rgb(*THEME['legend'])
-        context.show_text('line')
         context.translate((width - 823) / 2, (height - 128 - (4 + 18) * title) / 2)
         calendar_graph(context, data)
 
@@ -263,7 +261,7 @@ def draw_image(data: dict[date, dict[str, int]], ratio: float):
             context.stroke()
 
 
-def contributions(username: str) -> Iterator[tuple[date, dict[str, int]]]:
+def contributions(username: str) -> Iterator[tuple[date, int]]:
     """Pull contributions from GitHub since its founded (2008).
 
     Args:
@@ -271,9 +269,7 @@ def contributions(username: str) -> Iterator[tuple[date, dict[str, int]]]:
 
     Returns:
         Dictionary key-value iterator with date key.
-        Value is a dictionary with two int values.
-        The 'count' key means the number of commits.
-        The 'level' key is the cell light from 1 to 4.
+        Value is the cell light from 1 to 4.
     """
     for year in range(FOUNDED, date.today().year + 1):
         calendar = requests.get(
@@ -284,29 +280,24 @@ def contributions(username: str) -> Iterator[tuple[date, dict[str, int]]]:
                                   'html.parser').find_all('rect'):
             day = rect.get('data-date')
             if day:
-                count = int(rect.get('data-count'))
-                if count:
-                    yield date.fromisoformat(day), {'count' : count,
-                        'level' : int(rect.get('data-level'))}
+                yield date.fromisoformat(day), int(rect.get('data-level'))
 
 def save(data: dict[date, dict[str, int]]):
     """Save contribution dictionary to JSON with script matching name.
 
     Args:
-        data: Dictionary of date keys with commits count and light levels.
+        data: Dictionary of date keys with light levels.
     """
     with open(JSON, 'w') as file:
         json.dump(dict((key.isoformat(), value)
             for key, value in data.items()), file)
 
-def load() -> dict[date, dict[str, int]]:
+def load() -> dict[date, int]:
     """Load contribution dictionary from JSON with script matching name.
 
     Returns:
         Dictionary key-value iterator with date key.
-        Value is a dictionary with two int values.
-        The 'count' key means the number of commits.
-        The 'level' key is the cell light from 1 to 4.
+        Value is the cell light from 1 to 4.
     """
     with open(JSON, 'r') as file:
         return dict((date.fromisoformat(key), value)
