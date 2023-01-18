@@ -24,6 +24,7 @@ RGB = lambda color: tuple(int(color[i:i + 2], 16) / 255 for i in (1, 3, 5))
 LIGHT_THEME = {
     'background': RGB('#ffffff'),
     'font'      : RGB('#24292f'),
+    'legend'    : RGB('#57606a'),
     'graph'     : RGB('#ebedf0'),
     'border'    : RGB('#1b1f23'),
     'alpha'     : 0.06
@@ -32,6 +33,7 @@ LIGHT_THEME = {
 DARK_THEME = {
     'background': RGB('#0d1117'),
     'font'      : RGB('#c9d1d9'),
+    'legend'    : RGB('#8b949e'),
     'graph'     : RGB('#161b22'),
     'border'    : RGB('#ffffff'),
     'alpha'     : 0.05
@@ -45,10 +47,10 @@ LIGHT_COLOR = {
 }
 
 LIGHT_WINTER_COLOR = {
-    1 : RGB('#0a3069'),
-    2 : RGB('#0969da'),
-    3 : RGB('#54aeff'),
-    4 : RGB('#b6e3ff')
+    1 : RGB('#b6e3ff'),
+    2 : RGB('#54aeff'),
+    3 : RGB('#0969da'),
+    4 : RGB('#0a3069')
 }
 
 LIGHT_HALLOWEEN_COLOR = {
@@ -80,10 +82,10 @@ DARK_COLOR = {
 }
 
 DARK_WINTER_COLOR = {
-    1 : RGB('#b6e3ff'),
-    2 : RGB('#54aeff'),
-    3 : RGB('#0969da'),
-    4 : RGB('#0a3069')
+    1 : RGB('#0a3069'),
+    2 : RGB('#0969da'),
+    3 : RGB('#54aeff'),
+    4 : RGB('#b6e3ff')
 }
 
 DARK_HALLOWEEN_COLOR = {
@@ -118,7 +120,7 @@ RADIUS = 2
 
 THEME = DARK_THEME
 COLOR = DARK_WINTER_COLOR
-SHIFT = 0 / 360
+SHIFT = 60 / 360
 TEXT = 'Learn how we count contributions'
 
 
@@ -186,13 +188,7 @@ def calendar_table(context: Context, data: dict[date, dict[str, int]]):
 
 def calendar_graph(context: Context, data: dict[date, dict[str, int]]):
     context.save()
-    context.set_source_rgb(*THEME['background'])
-    context.set_line_width(LINE)
-    context.paint()
-
-    context.select_font_face(FONT, FontSlant.NORMAL, FontWeight.NORMAL)
     context.set_source_rgb(*THEME['font'])
-    context.set_font_size(SIZE)
 
     context.move_to(0, 45)
     context.show_text('Mon')
@@ -219,12 +215,53 @@ def calendar_graph(context: Context, data: dict[date, dict[str, int]]):
     calendar_table(context, data)
     context.restore()
 
-def draw_image(data: dict[date, dict[str, int]], width: float, height: float):
-    with SVGSurface(SVG, 823, 128) as surface:
-        context = Context(surface)
+def draw_image(data: dict[date, dict[str, int]], ratio: float):
+    lines = TEXT.split('\n')
+    title = len(lines) if len(lines) > 0 else 1
 
-        lines = TEXT.split('\n')
+    width = 823 + 2 * (4 + 8)
+    height = 128 + 2 * (4 + 8) + (4 + 18) * title
+
+    if width > height * ratio:
+        height = width / ratio
+    else:
+        width = height * ratio
+
+    with SVGSurface(SVG, width, height) as surface:
+        context = Context(surface)
+        context.select_font_face(FONT, FontSlant.NORMAL, FontWeight.NORMAL)
+        context.set_source_rgb(*THEME['background'])
+        context.set_line_width(LINE)
+        context.set_font_size(SIZE)
+        context.paint()
+
+        context.set_source_rgb(*THEME['legend'])
+        context.show_text('line')
+        context.translate((width - 823) / 2, (height - 128 - (4 + 18) * title) / 2)
         calendar_graph(context, data)
+
+        context.translate((823 - 814) / 2, 128 + 4)
+        context.set_source_rgb(*THEME['legend'])
+        for i in range(len(lines)):
+            context.move_to(0, 16 + 1 + (18 + 4) * i)
+            context.show_text(lines[i])
+
+        context.move_to(814 - 120.14, 16 + 1)
+        context.show_text('Less ')
+        context.move_to(814 - 33, 16 + 1)
+        context.show_text(' More')
+
+        between = (120.14 - 25.14 - 33 - 10 * 5) / 4
+        for i in range(5):
+            roundrect(context, 814 - 120.14 + 25.14 + (10 + between) * i, 7, 10, 10, RADIUS)
+            context.set_source_rgb(*get_color([i]))
+            context.fill_preserve()
+            context.stroke()
+
+            roundrect(context, 814 - 120.14 + 25.14 + (10 + between) * i, 7, 10, 10, RADIUS)
+            context.set_source_rgba(*THEME['border'], THEME['alpha'])
+            context.stroke()
+
 
 def contributions(username: str) -> Iterator[tuple[date, dict[str, int]]]:
     """Pull contributions from GitHub since its founded (2008).
@@ -282,9 +319,10 @@ def main():
     data = load()
     # data = dict(filter(lambda item: item[0].year == 2021, data.items()))
 
-    with SVGSurface(SVG, 823, 128) as surface:
-        context = Context(surface)
-        calendar_graph(context, data)
+    draw_image(data, 149 / 29)
+    # with SVGSurface(SVG, 823, 128) as surface:
+    #     context = Context(surface)
+    #     calendar_graph(context, data)
 
 if __name__ == '__main__':
     main()
